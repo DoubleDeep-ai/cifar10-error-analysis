@@ -1,6 +1,6 @@
 # CIFAR-10 · Beyond Accuracy
 
-### 작은 CNN은 무엇을 틀리고, 얼마나 확신하며 틀릴까?
+**작은 CNN은 무엇을 틀리고, 얼마나 확신하며 틀릴까?**
 
 **PyTorch · Error Analysis · Confidence · Reproducibility**
 
@@ -64,9 +64,15 @@
 저장소가 비공개이면 노트북을 내려받아 Colab의 '노트북 업로드'로 열 수 있습니다.
 
 1. Colab GPU 런타임을 선택하거나 로컬 Python 환경을 준비합니다.
-2. 필요한 패키지를 설치합니다: `pip install -r requirements.txt`
+2. Colab에 노트북만 업로드했다면 새 코드 셀에서 아래 명령으로 패키지를 설치합니다. 저장소 전체를 내려받은 로컬 환경에서는 저장소 폴더에서 `pip install -r requirements.txt`를 실행합니다.
 3. 첫 설정 셀에서 Drive 사용 여부와 데이터 경로를 지정합니다. 로컬에서는 `USE_DRIVE=False`로 변경합니다.
 4. 셀을 위에서부터 실행합니다. CIFAR-10 다운로드와 5회 학습이 수행됩니다.
+
+```python
+%pip install torch torchvision numpy pandas matplotlib scikit-learn
+```
+
+위 명령은 Colab/Jupyter 셀용입니다. 원본 패키지 버전이 고정되어 있지 않아 환경에 따라 실행 결과가 달라질 수 있습니다.
 
 ## 실험 설정
 
@@ -79,3 +85,13 @@ CIFAR-10 train 50,000 / test 10,000, 입력 32×32, 채널별 평균·표준편�
 평균 ± 표준편차는 신뢰구간이 아닙니다. 테스트셋 기반 사후 분석이며, 배경 의존과 클래스 혼동의 원인은 추가 검증이 필요한 가설입니다. t-SNE와 위치추정에 대한 논의는 각각 탐색적 시각화와 개념적 연결입니다. 위치추정 구현은 포함하지 않습니다.
 
 다음 실험에서는 별도 검증셋으로 보정·임계값을 선택하고 데이터 증강과 모델 변경을 통제 비교할 예정입니다.
+
+## 다른 프로젝트
+
+| 프로젝트 | 주요 내용 |
+|---|---|
+| [YOLO · 균열 세그멘테이션](https://github.com/DoubleDeep-ai/YOLO) | 토목 이미지의 균열 탐지·마스크 분석 및 SAM 후처리 |
+| [CIFAR-10 · 오류 분석](https://github.com/DoubleDeep-ai/cifar10-error-analysis) | PyTorch CNN의 오분류·신뢰도·시드별 변동 분석 |
+| [OSM · 캠퍼스 지도 분석](https://github.com/DoubleDeep-ai/osm-campus-map-analysis) | 공공 지도와 보행 네트워크의 공간정보 탐색 |
+
+각 저장소는 독립된 프로젝트입니다. 비공개 저장소 링크는 접근 권한이 있는 계정에서 열립니다.

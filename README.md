@@ -1,6 +1,16 @@
-# CIFAR-10 오류·신뢰도 분석
+# CIFAR-10 · Beyond Accuracy
+
+### 작은 CNN은 무엇을 틀리고, 얼마나 확신하며 틀릴까?
+
+**PyTorch · Error Analysis · Confidence · Reproducibility**
+
+[분석 노트북](cifar10_error_analysis.ipynb) · [상세 결과](results/summary.md) · [실행 방법](#실행-방법)
 
 작은 PyTorch CNN을 학습하고 **어떤 오류를 내는지, 틀린 예측에도 얼마나 확신하는지, 시드에 따라 결과가 얼마나 달라지는지** 분석한 프로젝트입니다.
+
+![높은 신뢰도로 틀린 고양이 이미지 16개](assets/confident-errors.png)
+
+*정답은 모두 cat입니다. 이미지 위에는 모델의 예측 클래스와 최대 softmax 점수가 표시됩니다. seed 0의 고양이 오답 중 점수가 높은 16개를 골랐으며, 전체 테스트셋의 대표 표본은 아닙니다. 표시된 100%는 반올림된 점수입니다.*
 
 ## 핵심 결과
 
@@ -14,6 +24,27 @@
 | seed 0: 신뢰도 ≥ 0.9인 예측의 오답률 | 9.4% (대상 2,916개) |
 
 전체 정확도와 함께 클래스별 변동, 혼동 방향, 신뢰도와 실제 정답률을 확인했습니다. 높은 softmax 점수에서도 오답이 남았습니다.
+
+## 결과를 그림으로 보기
+
+### 01 · 어떤 클래스를 혼동하는가?
+
+<img src="assets/confusion-matrix.png" alt="Seed 0의 행 기준 정규화 혼동 행렬" width="720">
+
+행은 정답, 열은 예측이며 각 행의 합은 약 100%입니다. seed 0에서 **dog의 37%가 cat으로 분류**되었습니다. 혼동 행렬은 오류의 방향을 보여주지만, 배경이나 색상이 원인인지는 별도 실험이 필요합니다.
+
+### 02 · 같은 설정에서도 결과는 얼마나 달라지는가?
+
+![5개 시드의 클래스별 정확도 평균과 표준편차](assets/seed-variability.png)
+
+10 epoch, 동일한 설정에서 시드 0~4를 비교했습니다. 전체 정확도는 **61.5 ± 0.6%**지만 dog와 cat의 표준편차는 각각 **12.1%p, 9.5%p**입니다. 오차 막대는 표본 표준편차이며 신뢰구간이 아닙니다.
+
+<details>
+<summary>신뢰도·t-SNE 등 전체 그래프 보기</summary>
+
+[노트북](cifar10_error_analysis.ipynb)에서 정답 이미지, 신뢰도 분포와 reliability diagram, 임계값별 accuracy·coverage, t-SNE를 포함한 전체 7개 그림을 볼 수 있습니다. README의 3개 그림은 제공된 `cifar10_error_analysis (4).ipynb`의 저장된 PNG 출력에서 그대로 추출했습니다. 학습을 다시 실행하지 않았습니다.
+
+</details>
 
 ## 구현 내용
 

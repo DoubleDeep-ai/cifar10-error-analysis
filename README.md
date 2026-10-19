@@ -39,10 +39,30 @@ PyTorch · Error Analysis · Confidence · Reproducibility
 
 10 epoch, 동일한 설정에서 시드 0~4를 비교했습니다. 전체 정확도는 61.5 ± 0.6%지만 dog와 cat의 표준편차는 각각 12.1%p, 9.5%p입니다. 오차 막대는 표본 표준편차이며 신뢰구간이 아닙니다.
 
-<details>
-<summary>신뢰도·t-SNE 등 전체 그래프 보기</summary>
+### 모델이 학습한 특징 분포
 
-[노트북](cifar10_error_analysis.ipynb)에서 정답 이미지, 신뢰도 분포와 reliability diagram, 임계값별 accuracy·coverage, t-SNE를 포함한 전체 7개 그림을 볼 수 있습니다. README의 3개 그림은 `cifar10_error_analysis (4).ipynb`의 저장된 PNG 출력에서 그대로 추출했습니다. 학습을 다시 실행하지 않았습니다.
+<img src="assets/feature-tsne.png" alt="84차원 특징을 2차원으로 투영한 CIFAR-10 t-SNE" width="720">
+
+테스트 이미지 2,000개의 84차원 특징을 t-SNE로 2차원에 표시했습니다. 점 하나는 이미지 하나이며 색은 정답 클래스입니다. car와 truck은 비교적 모여 있는 영역이 보이고, 여러 동물 클래스는 겹쳐 있습니다.
+
+이 그림은 특징의 국소적인 분포를 탐색하기 위한 시각화입니다. 군집 사이 거리나 겹침만으로 분류 성능과 오류 원인을 확정하지 않습니다. 설정은 perplexity 30, random_state 0입니다.
+
+### 신뢰도와 실제 정답률
+
+![정답과 오답의 신뢰도 분포 및 reliability diagram](assets/confidence-calibration.png)
+
+왼쪽은 정답·오답의 최대 softmax 점수 분포이고, 오른쪽은 신뢰도 구간별 실제 정답률입니다. 높은 신뢰도에서도 오답이 남으며, 저장된 실행의 10-bin ECE는 약 7.7%입니다. 점수를 그대로 정답 확률로 해석하기에는 차이가 있습니다.
+
+### 신뢰도 기준을 높였을 때의 변화
+
+<img src="assets/accuracy-coverage.png" alt="신뢰도 임계값에 따른 유지된 예측의 정확도와 비율" width="640">
+
+신뢰도 기준을 높일수록 남은 예측의 정확도는 높아지지만 사용할 수 있는 예측 수는 줄어듭니다. seed 0에서 신뢰도 0.9 이상인 예측은 2,916개이며, 이 중 오답률은 9.4%입니다. 이 결과는 테스트셋 사후 분석으로, 실제 적용 기준은 별도 검증셋에서 선택해야 합니다.
+
+<details>
+<summary>그림의 출처와 전체 출력 보기</summary>
+
+[노트북](cifar10_error_analysis.ipynb)에서 정답 이미지, 신뢰도 분포와 reliability diagram, 임계값별 accuracy·coverage, t-SNE를 포함한 전체 7개 그림을 볼 수 있습니다. README의 6개 그림은 `cifar10_error_analysis (4).ipynb`의 저장된 PNG 출력에서 그대로 추출했습니다. 학습을 다시 실행하지 않았습니다.
 
 </details>
 

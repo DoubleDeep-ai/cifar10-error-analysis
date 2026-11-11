@@ -1,18 +1,17 @@
-# CIFAR-10 · Beyond Accuracy
+# CIFAR-10 작은 CNN 오류 분석
+
+## 왜 했는지
 
 작은 CNN은 무엇을 틀리고, 얼마나 확신하며 틀릴까?
 
-PyTorch · Error Analysis · Confidence · Reproducibility
+[직접 쓰기: 정확도 말고 오류를 보게 된 이유]
 
-[분석 노트북](cifar10_error_analysis.ipynb) · [상세 결과](results/summary.md) · [실행 방법](#실행-방법)
+## 설정
 
-작은 PyTorch CNN을 학습하고 어떤 오류를 내는지, 틀린 예측에도 얼마나 확신하는지, 시드에 따라 결과가 얼마나 달라지는지 분석한 프로젝트입니다.
+합성곱 2층·완전연결 3층의 CNN을 10 epoch, batch 32로 학습했다.  
+SGD(lr 0.01, momentum 0.9)를 사용했고, 데이터 증강 없이 seed 0~4를 비교했다.
 
-![높은 신뢰도로 틀린 고양이 이미지 16개](assets/confident-errors.png)
-
-정답은 모두 cat입니다. 이미지 위에는 모델의 예측 클래스와 최대 softmax 점수가 표시됩니다. seed 0의 고양이 오답 중 점수가 높은 16개를 골랐으며, 전체 테스트셋의 대표 표본은 아닙니다. 표시된 100%는 반올림된 점수입니다.
-
-## 핵심 결과
+## 결과
 
 | 항목 | 저장된 실행 결과 |
 |---|---:|
@@ -23,95 +22,34 @@ PyTorch · Error Analysis · Confidence · Reproducibility
 | seed 0: dog → cat 오분류율 | 37.0% |
 | seed 0: 신뢰도 ≥ 0.9인 예측의 오답률 | 9.4% (대상 2,916개) |
 
-전체 정확도와 함께 클래스별 변동, 혼동 방향, 신뢰도와 실제 정답률을 확인했습니다. 높은 softmax 점수에서도 오답이 남았습니다.
+전체 정확도는 시드 간 차이가 작았지만 dog·cat의 정확도는 크게 흔들렸다.  
+seed 0에서는 dog의 37.0%를 cat으로 분류했고, 신뢰도 0.9 이상에서도 오답률이 9.4%였다.  
+10-bin ECE는 약 7.7%로, 모델의 신뢰도와 실제 정답률에 차이가 있었다.
 
-## 결과를 그림으로 보기
+![높은 신뢰도로 틀린 고양이 이미지](assets/confident-errors.png)
 
-### 클래스별 혼동 행렬
+seed 0의 고양이 오답 중 신뢰도가 높은 16개를 골라 예측 클래스와 최대 softmax 점수를 표시했다.
 
-<img src="assets/confusion-matrix.png" alt="Seed 0의 행 기준 정규화 혼동 행렬" width="720">
+![신뢰도 분포와 reliability diagram](assets/confidence-calibration.png)
 
-행은 정답, 열은 예측이며 각 행의 합은 약 100%입니다. seed 0에서 dog의 37%가 cat으로 분류되었습니다. 혼동 행렬은 오류의 방향을 보여주지만, 배경이나 색상이 원인인지는 별도 실험이 필요합니다.
+정답·오답의 신뢰도 분포와 신뢰도 구간별 실제 정답률을 비교했다.
 
-### 시드별 성능 변동
+나머지 그림은 [노트북](cifar10_error_analysis.ipynb)에 정리했다.
 
-![5개 시드의 클래스별 정확도 평균과 표준편차](assets/seed-variability.png)
+## 한계
 
-10 epoch, 동일한 설정에서 시드 0~4를 비교했습니다. 전체 정확도는 61.5 ± 0.6%지만 dog와 cat의 표준편차는 각각 12.1%p, 9.5%p입니다. 오차 막대는 표본 표준편차이며 신뢰구간이 아닙니다.
+- 테스트셋 사후 분석이어서, 실제 사용할 임계값은 별도 검증셋에서 정해야 했다.
+- 배경·색이 오류의 원인이라는 해석은 가설로 남겼다.
+- 패키지 버전을 고정하지 못했다.
 
-### 모델이 학습한 특징 분포
+## 다음에 해 볼 것
 
-<img src="assets/feature-tsne.png" alt="84차원 특징을 2차원으로 투영한 CIFAR-10 t-SNE" width="720">
+별도 검증셋으로 보정·임계값을 선택하고, 데이터 증강과 모델 변경을 통제 비교하기로 했다.
 
-테스트 이미지 2,000개의 84차원 특징을 t-SNE로 2차원에 표시했습니다. 점 하나는 이미지 하나이며 색은 정답 클래스입니다. car와 truck은 비교적 모여 있는 영역이 보이고, 여러 동물 클래스는 겹쳐 있습니다.
-
-이 그림은 특징의 국소적인 분포를 탐색하기 위한 시각화입니다. 군집 사이 거리나 겹침만으로 분류 성능과 오류 원인을 확정하지 않습니다. 설정은 perplexity 30, random_state 0입니다.
-
-### 신뢰도와 실제 정답률
-
-![정답과 오답의 신뢰도 분포 및 reliability diagram](assets/confidence-calibration.png)
-
-왼쪽은 정답·오답의 최대 softmax 점수 분포이고, 오른쪽은 신뢰도 구간별 실제 정답률입니다. 높은 신뢰도에서도 오답이 남으며, 저장된 실행의 10-bin ECE는 약 7.7%입니다. 점수를 그대로 정답 확률로 해석하기에는 차이가 있습니다.
-
-### 신뢰도 기준을 높였을 때의 변화
-
-<img src="assets/accuracy-coverage.png" alt="신뢰도 임계값에 따른 유지된 예측의 정확도와 비율" width="640">
-
-신뢰도 기준을 높일수록 남은 예측의 정확도는 높아지지만 사용할 수 있는 예측 수는 줄어듭니다. seed 0에서 신뢰도 0.9 이상인 예측은 2,916개이며, 이 중 오답률은 9.4%입니다. 이 결과는 테스트셋 사후 분석으로, 실제 적용 기준은 별도 검증셋에서 선택해야 합니다.
-
-<details>
-<summary>그림의 출처와 전체 출력 보기</summary>
-
-[노트북](cifar10_error_analysis.ipynb)에서 정답 이미지, 신뢰도 분포와 reliability diagram, 임계값별 accuracy·coverage, t-SNE를 포함한 전체 7개 그림을 볼 수 있습니다. README의 6개 그림은 `cifar10_error_analysis (4).ipynb`의 저장된 PNG 출력에서 그대로 추출했습니다. 학습을 다시 실행하지 않았습니다.
-
-</details>
-
-## 구현 내용
-
-- PyTorch 모델·학습·평가 루프: 합성곱 2개, 완전연결층 3개
-- 행 기준 정규화 혼동 행렬과 주요 오분류 쌍
-- 고양이 정답·고신뢰도 오답 이미지 비교
-- 신뢰도 분포, 10-bin ECE, 신뢰도 임계값별 정확도·coverage
-- 84차원 특징 2,000개의 t-SNE 시각화
-- 시드 0~4의 전체·클래스별 정확도 및 표준편차
-
-그래프와 출력은 [분석 노트북](cifar10_error_analysis.ipynb), 상세 숫자는 [결과 요약](results/summary.md)에 있습니다.
-
-## 실행 방법
+## 실행
 
 [Colab에서 열기](https://colab.research.google.com/github/DoubleDeep-ai/cifar10-error-analysis/blob/main/cifar10_error_analysis.ipynb)
 
-저장소가 비공개이면 노트북을 내려받아 Colab의 '노트북 업로드'로 열 수 있습니다.
+GPU 런타임에서 셀을 위에서부터 순서대로 실행했다.
 
-1. Colab GPU 런타임을 선택하거나 로컬 Python 환경을 준비합니다.
-2. Colab에 노트북만 업로드했다면 새 코드 셀에서 아래 명령으로 패키지를 설치합니다. 저장소 전체를 내려받은 로컬 환경에서는 저장소 폴더에서 `pip install -r requirements.txt`를 실행합니다.
-3. 첫 설정 셀에서 Drive 사용 여부와 데이터 경로를 지정합니다. 로컬에서는 `USE_DRIVE=False`로 변경합니다.
-4. 셀을 위에서부터 실행합니다. CIFAR-10 다운로드와 5회 학습이 수행됩니다.
-
-```python
-%pip install torch torchvision numpy pandas matplotlib scikit-learn
-```
-
-위 명령은 Colab/Jupyter 셀용입니다. 원본 패키지 버전이 고정되어 있지 않아 환경에 따라 실행 결과가 달라질 수 있습니다.
-
-## 실험 설정
-
-CIFAR-10 train 50,000 / test 10,000, 입력 32×32, 채널별 평균·표준편차 0.5로 정규화. 10 epoch, batch 32, SGD(lr=0.01, momentum=0.9), cross entropy. 데이터 증강은 적용하지 않았습니다.
-
-## 해석 범위
-
-결과는 노트북에 저장된 실행 출력을 기준으로 정리했습니다. 문서 수정 과정에서 재학습하지 않았습니다. 정확한 패키지 버전과 체크포인트는 포함되어 있지 않습니다. requirements.txt는 의존성 목록이며 검증된 버전 고정 환경이 아닙니다.
-
-평균 ± 표준편차는 신뢰구간이 아닙니다. 테스트셋 기반 사후 분석이며, 배경 의존과 클래스 혼동의 원인은 추가 검증이 필요한 가설입니다. t-SNE와 위치추정에 대한 논의는 각각 탐색적 시각화와 개념적 연결입니다. 위치추정 구현은 포함하지 않습니다.
-
-다음 실험에서는 별도 검증셋으로 보정·임계값을 선택하고 데이터 증강과 모델 변경을 통제 비교할 예정입니다.
-
-## 다른 프로젝트
-
-| 프로젝트 | 주요 내용 |
-|---|---|
-| [YOLO · 균열 세그멘테이션](https://github.com/DoubleDeep-ai/YOLO) | 토목 이미지의 균열 탐지·마스크 분석 및 SAM 후처리 |
-| [CIFAR-10 · 오류 분석](https://github.com/DoubleDeep-ai/cifar10-error-analysis) | PyTorch CNN의 오분류·신뢰도·시드별 변동 분석 |
-| [OSM · 캠퍼스 지도 분석](https://github.com/DoubleDeep-ai/osm-campus-map-analysis) | 공공 지도와 보행 네트워크의 공간정보 탐색 |
-
-각 저장소는 독립된 프로젝트입니다. 비공개 저장소 링크는 접근 권한이 있는 계정에서 열립니다.
+코드 작성에 AI 도구를 보조로 활용했으며, 실험 설계와 결과 해석은 직접 수행했습니다.
